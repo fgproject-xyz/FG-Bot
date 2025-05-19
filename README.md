@@ -26,10 +26,10 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/fg-bot
+git clone https://github.com/fgproject-xyz/FG-Bot
 
 # Navigate to the directory
-cd fg-bot
+cd FG-Bot
 
 # Install dependencies
 npm install
