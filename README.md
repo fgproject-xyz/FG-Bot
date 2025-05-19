@@ -3,6 +3,7 @@
 ![Made with Node.js](https://img.shields.io/badge/Made%20with-Node.js-green?style=for-the-badge&logo=node.js)
 ![Platform](https://img.shields.io/badge/Platform-WhatsApp-blue?style=for-the-badge&logo=whatsapp)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey?style=for-the-badge)
+![Using Baileys](https://raw.githubusercontent.com/WhiskeySockets/Baileys/refs/heads/master/Media/logo.png)
 
 ---
 
