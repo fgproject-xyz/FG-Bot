@@ -27,7 +27,7 @@
 ## 🧩 Tech Stack
 
 - **Runtime:** Node.js
-- **WhatsApp API:** [`@whiskeysockets/baileys`](https://github.com/WhiskeySockets/Baileys)
+- **WhatsApp API:** [`@nstar-y/bail`](https://github.com/nstar-y/bail).
 - **Architecture:** Plugin-based command system
 
 ---
