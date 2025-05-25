@@ -78,7 +78,7 @@ The `config.json` file contains basic bot settings:
 
 ### Configuration Keys:
 
-- `owner`: A single WhatsApp number (as a string) with full access (in international format).
+- `owner`: A single WhatsApp number with full access (in international format).
 - `botname`: The display name of the bot.
 - `pairing.usePairingCode`: Set to `true` to use a custom pairing code for login, or `false` to use QR code.
 - `pairing.CostumPairingCode`: The pairing code used if `usePairingCode` is set to `true`.
