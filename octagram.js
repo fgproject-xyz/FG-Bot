@@ -104,7 +104,7 @@ module.exports = async function (pelaku, isipesan, typepesan, messages, trueDrag
         let akh = lower.slice(1)
         lower = akh
     }
-    if (lower === "sikma") {
+    if (lower === "menu") {
         const folders = fs.readdirSync(pluginFolder).filter(f => fs.statSync(path.join(pluginFolder, f)).isDirectory());
         const sections = [
             {
