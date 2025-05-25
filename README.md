@@ -77,12 +77,14 @@ The `config.json` file contains basic bot settings:
 ```
 
 ### Configuration Keys:
-- `owner`: Array of WhatsApp numbers with full access (in international format).
-- `premium`: Array of premium user numbers.
-- `sessionName`: Session folder name for Baileys authentication.
-- `prefix`: Command prefix (e.g., `.`, `!`, etc.).
-- `autoread`: Automatically marks messages as read.
-- `public`: Set `true` for public access or `false` for private.
+
+- `owner`: A single WhatsApp number (as a string) with full access (in international format).
+- `botname`: The display name of the bot.
+- `pairing.usePairingCode`: Set to `true` to use a custom pairing code for login, or `false` to use QR code.
+- `pairing.CostumPairingCode`: The pairing code used if `usePairingCode` is set to `true`.
+- `gambar`: URL of the bot's default profile picture.
+- `db.isPremium`: Array of WhatsApp numbers with premium access.
+- `db.antihidetag`: Set to `true` to enable anti-hide-tag feature, useful for group anti-ghosting.
 
 ---
 
@@ -139,6 +141,20 @@ module.exports = {
 
 > You can duplicate this format to create other features such as YouTube downloader, group tools, games, utilities, and more.
 
+---
+
+## 📘 Plugin Parameters Explained
+
+Each plugin function receives several parameters when executed. Here's what each parameter means:
+
+- `pelaku`: The sender's WhatsApp number (in international format).
+- `isipesan`: The full message content received by the bot.
+- `typepesan`: The message type (e.g., `conversation`, `imageMessage`, `videoMessage`, etc.).
+- `messages`: Full JSON object from `sock.ev.on('messages.upsert')` — contains all message metadata.
+- `trueDragon`: The main connection instance. You can use this to send messages, images, videos, buttons, and more, e.g., `trueDragon.sendMessage(...)`.
+- `reply`: A helper function to quickly reply to a message (usually a wrapper of `trueDragon.sendMessage` with quoted content).
+- `owner`: The WhatsApp number defined as the bot's owner.
+  
 ---
 
 ## 📬 Contribution
