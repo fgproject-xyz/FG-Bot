@@ -9,7 +9,7 @@
 
 ## 📌 Description
 
-**FG Bot** is a lightweight, modular WhatsApp bot built using [`@whiskeysockets/baileys`](https://github.com/WhiskeySockets/Baileys). It offers powerful automation features, support for interactive buttons, and an easy-to-extend plugin system, making it perfect for both beginners and advanced developers.
+**FG Bot** is a lightweight, modular WhatsApp bot built using [`@nstar-y/bail`](https://github.com/nstar-y/bail). It offers powerful automation features, support for interactive buttons, and an easy-to-extend plugin system, making it perfect for both beginners and advanced developers.
 
 ---
 
