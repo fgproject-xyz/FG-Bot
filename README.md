@@ -56,12 +56,23 @@ The `config.json` file contains basic bot settings:
 
 ```json
 {
-  "owner": ["6281234567890"],
-  "premium": ["6289876543210"],
-  "sessionName": "fgbot",
-  "prefix": ".",
-  "autoread": true,
-  "public": true
+  "owner": "6285136660874",
+  "botname": "FG Bot",
+
+  "pairing": {
+    "_comment": "Set to false to use QR Code for login",
+    "usePairingCode": true,
+    "CostumPairingCode": "HEHEBOYY"
+  },
+
+  "gambar": "https://raw.githubusercontent.com/fgproject-xyz/FG-Bot/refs/heads/main/photo_2025-05-18_22-15-17.jpg",
+
+  "db": {
+    "isPremium": [
+      "6285136660874"
+    ],
+    "antihidetag": true
+  }
 }
 ```
 
