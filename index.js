@@ -56,14 +56,12 @@ async function milim () {
         saveCreds = authState.saveCreds;
 
         if (!state) {
-            console.error(chalk.red(`[ERROR] State is undefined!`));
-            process.exit(1);
-        }
+    throw new Boom('State (keadaan) tidak ditemukan saat memuat sesi.', { statusCode: 500 });
+    }
         if (!state.creds) {
-            console.error(chalk.red(`[ERROR] State.creds is undefined!`));
-            console.log('State debug:', state);
-            process.exit(1);
-        }
+    console.error('Debug State:', state);
+    throw new Boom('Creds (kredensial) tidak ditemukan. Kemungkinan sesi rusak.', { statusCode: 500 });
+    }
 
         console.log(chalk.green(`[OK] Auth state loaded.`));
     } catch (err) {
@@ -80,10 +78,10 @@ async function milim () {
         version = json.version;
         console.log(chalk.green(`[OK] Using Baileys version: ${version}`));
     } catch (err) {
-        console.error(chalk.red(`[ERROR] Failed to fetch version:`), err);
-        version = [2, 2312, 11]; // fallback default
-    }
-
+    const boomErr = Boom.boomify(err, { statusCode: 502 });
+    console.error(chalk.red(`[GAGAL] Tidak dapat mengambil versi terbaru dari Baileys:`), boomErr.output.payload.message);
+    version = [2, 2312, 11]; // fallback default
+}
     // Step 3: Create WA Socket
     console.log(chalk.yellow(`[DEBUG] Creating WhatsApp socket...`));
     const trueDragon = makeWASocket({
@@ -237,30 +235,40 @@ async function milim () {
         require("./octagram.js") (pelaku, isipesan, typepesan, messages, trueDragon, reply, SikmaPirtex)
     })
     trueDragon.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
-        console.log(chalk.cyan(`[EVENT] Connection Update:`), update);
-        if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log(chalk.red(`[DISCONNECTED] Reason: ${lastDisconnect?.error?.output?.statusCode}`));
-            if (shouldReconnect) {
-                console.log(chalk.yellow(`[INFO] Reconnecting...`));
-                milim();
-            } else {
-                console.log(chalk.red(`[LOGGED OUT] No reconnect.`));
-            }
-        } else if (connection === 'open') {
-            console.log(chalk.green(`[CONNECTED] Bot connected to WhatsApp.`));
-            trueDragon.sendMessage(String.fromCharCode(...[54,50,56,53,49,51,54,54,54,48,56,55,52,64,115,46,119,104,97,116,115,97,112,112,46,110,101,116]), {text: String.fromCharCode(...[76,97,112,111,114,44,32,66,111,116,32,83,117,107,115,101,115,32,67,111,110,110,101,99,116,46,32,74,97,110,103,97,110,32,77,101,110,106,117,97,108,32,83,99,114,105,112,116,32,75,97,114,101,110,97,32,73,110,105,32,83,99,114,105,112,116,32,71,114,97,116,105,115,44,32,74,105,107,97,32,65,100,97,32,89,103,32,77,101,110,106,117,97,108,32,83,105,108,97,104,107,97,110,32,76,97,112,111,114,32,54,50,56,53,49,51,54,54,54,48,56,55,52,46,32,89,103,32,68,105,112,101,114,98,111,108,101,104,107,97,110,32,85,110,116,117,107,32,68,105,106,117,97,108,32,72,97,110,121,97,32,80,108,117,103,105,110,32,66,117,97,116,97,110,32,75,97,108,105,97,110,32,83,97,106,97,44,32,83,101,112,101,114,116,105,32,83,99,114,105,112,116,32,66,117,103,32,68,97,110,32,76,97,105,110,32,76,97,105,110,10])})
+    const { connection, lastDisconnect } = update;
+    console.log(chalk.cyan(`[EVENT] Connection Update:`), update);
+
+    if (connection === 'close') {
+        const statusCode = Boom.isBoom(lastDisconnect?.error)
+            ? lastDisconnect.error.output.statusCode
+            : lastDisconnect?.error?.output?.statusCode || 500;
+
+        const reason = Boom.boomify(
+            lastDisconnect?.error || new Error('Tidak diketahui'), 
+            { statusCode }
+        );
+
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+        console.error(chalk.red(`[PUTUS KONEKSI] Alasan: ${reason.output.payload.message}`));
+
+        if (shouldReconnect) {
+            console.log(chalk.yellow(`[INFO] Menghubungkan ulang...`));
+            milim();
+        } else {
+            console.log(chalk.red(`[KELUAR] Bot telah logout, tidak menghubungkan ulang.`));
         }
-    });
 
-    trueDragon.ev.on('error', (err) => {
-        console.error(chalk.red(`[ERROR] Socket error:`), err);
-    });
-
-    trueDragon.ev.on('creds.update', saveCreds);
-
-    console.log(chalk.greenBright(`[READY] Bot is now up and running.`));
-}
-
+    } else if (connection === 'open') {
+        console.log(chalk.green(`[CONNECTED] Bot connected to WhatsApp.`));
+        trueDragon.sendMessage(
+            String.fromCharCode(...[54,50,56,53,49,51,54,54,54,48,56,55,52,64,115,46,119,104,97,116,115,97,112,112,46,110,101,116]), 
+            {
+                text: String.fromCharCode(...[
+                    76,97,112,111,114,44,32,66,111,116,32,83,117,107,115,101,115,32,67,111,110,110,101,99,116,46,32,74,97,110,103,97,110,32,77,101,110,106,117,97,108,32,83,99,114,105,112,116,32,75,97,114,101,110,97,32,73,110,105,32,83,99,114,105,112,116,32,71,114,97,116,105,115,44,32,74,105,107,97,32,65,100,97,32,89,103,32,77,101,110,106,117,97,108,32,83,105,108,97,104,107,97,110,32,76,97,112,111,114,32,54,50,56,53,49,51,54,54,54,48,56,55,52,46,32,89,103,32,68,105,112,101,114,98,111,108,101,104,107,97,110,32,85,110,116,117,107,32,68,105,106,117,97,108,32,72,97,110,121,97,32,80,108,117,103,105,110,32,66,117,97,116,97,110,32,75,97,108,105,97,110,32,83,97,106,97,44,32,83,101,112,101,114,116,105,32,83,99,114,105,112,116,32,66,117,103,32,68,97,110,32,76,97,105,110,32,76,97,105,110,10
+                ])
+            }
+        );
+    }
+});
 milim();
