@@ -1,0 +1,4 @@
+session
+.tmp
+node_modules
+config.json
