@@ -1,12 +1,12 @@
 {
-  "botname": "らいでん しょうぐん",
-  "owner": ["6285136660874"],
-  "premium": ["6285136660874"],
+  "botname": "らいでん しょうぐん", //your bot name 
+  "owner": ["6285136660874"], //bot owner number
+  "premium": ["6285136660874"], //premium number can change string to add more premium users [] 
   "pairing": {
-    "usePairingCode": true,
-    "CostumPairingCode": "SIKMASIK"
+    "usePairingCode": true, //true, to use pairing code | false => qrcode
+    "CostumPairingCode": "SIKMASIK" //custom pairing code with (8 characters!)
   },
   "db": {
-    "groups": {}
+    "groups": {} //database 
   }
 }
