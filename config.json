@@ -1,0 +1,42 @@
+{
+  "botname": "らいでん しょうぐん",
+  "owner": [
+    "6285136660874"
+  ],
+  "premium": [
+    "6285136660874"
+  ],
+  "pairing": {
+    "usePairingCode": true,
+    "CostumPairingCode": "SIKMASIK"
+  },
+  "db": {
+    "groups": {
+      "120363401467660537@g.us": {
+        "antitagsw": true,
+        "antihidetag": false,
+        "setmaxwarn": 3,
+        "warntagsw": {
+          "6283897655884@s.whatsapp.net": 0,
+          "6285658074772@s.whatsapp.net": 0,
+          "6285136660874@s.whatsapp.net": 0,
+          "120363401467660537@s.whatsapp.net": 0,
+          "6285138312096@s.whatsapp.net": 1
+        }
+      },
+      "120363403193768167@g.us": {
+        "antitagsw": true,
+        "antihidetag": false,
+        "setmaxwarn": 3,
+        "warntagsw": {
+          "6285136660874@s.whatsapp.net": 0,
+          "120363403193768167@s.whatsapp.net": 0,
+          "6283159684674@s.whatsapp.net": 5,
+          "6288980697492@s.whatsapp.net": 0,
+          "6285138312096@s.whatsapp.net": 0,
+          "6285143076397@s.whatsapp.net": 0
+        }
+      }
+    }
+  }
+}
