@@ -964,21 +964,13 @@ module.exports = async function (
         (async () => {
           const fs = require('fs');
           const path = require('path');
-          const simpleGit = require('simple-git');
-          const git = simpleGit();
+          const axios = require('axios');
 
           const config = require('./config.json');
           const GITHUB_TOKEN = config.github.yourToken;
           const GITHUB_USER = config.github.username;
           const REPO_NAME = config.github.yourRepo;
           const BRANCH = 'main';
-          const GITHUB_URL = `https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/${REPO_NAME}.git`;
-
-          const commitMsg = m.text.split(' ').slice(1).join(' ').trim();
-          if (!commitMsg)
-            return m.reply(
-              '❌ Masukkan commit message.\nContoh: .gitpush update fitur baru',
-            );
 
           const IGNORED = [
             'node_modules',
@@ -988,11 +980,16 @@ module.exports = async function (
             'session',
           ];
 
-          // === Ambil semua file secara rekursif ===
-          function getAllFiles(dir, baseDir = dir) {
-            let results = [];
-            const list = fs.readdirSync(dir);
-            for (const file of list) {
+          const commitMsg = m.text.split(' ').slice(1).join(' ').trim();
+          if (!commitMsg)
+            return m.reply(
+              '❌ Masukkan commit message.\nContoh: .gitpush update case baru',
+            );
+
+          // 🔁 Ambil semua file secara rekursif (kecuali yg di-ignore)
+          function getAllFiles(dir, fileList = [], baseDir = dir) {
+            const files = fs.readdirSync(dir);
+            for (const file of files) {
               const fullPath = path.join(dir, file);
               const relPath = path
                 .relative(baseDir, fullPath)
@@ -1000,41 +997,76 @@ module.exports = async function (
 
               if (
                 IGNORED.some(
-                  (ignore) =>
-                    relPath === ignore || relPath.startsWith(ignore + '/'),
+                  (ig) => relPath === ig || relPath.startsWith(ig + '/'),
                 )
               )
                 continue;
 
               const stat = fs.statSync(fullPath);
-              if (stat && stat.isDirectory()) {
-                results = results.concat(getAllFiles(fullPath, baseDir));
+              if (stat.isDirectory()) {
+                getAllFiles(fullPath, fileList, baseDir);
               } else {
-                results.push(relPath);
+                fileList.push(relPath);
               }
             }
-            return results;
+            return fileList;
+          }
+
+          // 📦 Ambil SHA file (kalau udah ada)
+          async function getFileSha(path) {
+            try {
+              const res = await axios.get(
+                `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${path}?ref=${BRANCH}`,
+                {
+                  headers: {
+                    Authorization: `token ${GITHUB_TOKEN}`,
+                  },
+                },
+              );
+              return res.data.sha;
+            } catch {
+              return null;
+            }
+          }
+
+          // ⬆️ Upload 1 file
+          async function uploadFile(filePath) {
+            const buffer = fs.readFileSync(filePath);
+            const content = buffer.toString('base64');
+            const sha = await getFileSha(filePath);
+
+            const payload = {
+              message: commitMsg,
+              content,
+              branch: BRANCH,
+            };
+            if (sha) payload.sha = sha;
+
+            await axios.put(
+              `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${filePath}`,
+              payload,
+              {
+                headers: {
+                  Authorization: `token ${GITHUB_TOKEN}`,
+                },
+              },
+            );
           }
 
           try {
-            const isRepo = await git.checkIsRepo();
-            if (!isRepo) {
-              await git.init();
-              await git.addRemote('origin', GITHUB_URL);
-            } else {
-              await git.remote(['set-url', 'origin', GITHUB_URL]);
+            const files = getAllFiles('.');
+            if (!files.length)
+              return m.reply('❌ Tidak ada file yang akan di-push.');
+
+            let total = 0;
+
+            for (const file of files) {
+              await uploadFile(file);
+              total++;
             }
 
-            const filesToAdd = getAllFiles('.');
-            if (!filesToAdd.length)
-              return m.reply('❌ Tidak ada file yang bisa di-push.');
-
-            await git.add(filesToAdd);
-            await git.commit(commitMsg);
-            await git.push(['-f', 'origin', BRANCH]);
-
             m.reply(
-              `✅ Berhasil *force push* ${filesToAdd.length} file ke GitHub dengan commit:\n\n📦 ${commitMsg}`,
+              `✅ Berhasil *upload* ${total} file ke GitHub satu-per-satu dengan commit:\n\n📦 ${commitMsg}`,
             );
           } catch (err) {
             m.reply(`❌ Gagal push: ${err.message}`);
