@@ -959,7 +959,8 @@ module.exports = async function (
 
     case 'gitpush':
       {
-        if (!m.isOwner) return m.reply('Maaf raja, ini bukan buat lu.');
+        if (!m.isOwner)
+          return m.reply('Sorry, this command is not available to you.');
 
         (async () => {
           const fs = require('fs');
@@ -983,10 +984,9 @@ module.exports = async function (
           const commitMsg = m.text.split(' ').slice(1).join(' ').trim();
           if (!commitMsg)
             return m.reply(
-              '❌ Masukkan commit message.\nContoh: .gitpush update case baru',
+              '❌ Please provide a commit message.\nExample: .gitpush added new feature',
             );
 
-          // 🔁 Ambil semua file secara rekursif (kecuali yg di-ignore)
           function getAllFiles(dir, fileList = [], baseDir = dir) {
             const files = fs.readdirSync(dir);
             for (const file of files) {
@@ -1012,7 +1012,6 @@ module.exports = async function (
             return fileList;
           }
 
-          // 📦 Ambil SHA file (kalau udah ada)
           async function getFileSha(path) {
             try {
               const res = await axios.get(
@@ -1029,7 +1028,6 @@ module.exports = async function (
             }
           }
 
-          // ⬆️ Upload 1 file
           async function uploadFile(filePath) {
             const buffer = fs.readFileSync(filePath);
             const content = buffer.toString('base64');
@@ -1055,8 +1053,7 @@ module.exports = async function (
 
           try {
             const files = getAllFiles('.');
-            if (!files.length)
-              return m.reply('❌ Tidak ada file yang akan di-push.');
+            if (!files.length) return m.reply('❌ No files found to push.');
 
             let total = 0;
 
@@ -1065,11 +1062,9 @@ module.exports = async function (
               total++;
             }
 
-            m.reply(
-              `✅ Berhasil *upload* ${total} file ke GitHub satu-per-satu dengan commit:\n\n📦 ${commitMsg}`,
-            );
+            m.reply(`✅ Successfully uploaded`);
           } catch (err) {
-            m.reply(`❌ Gagal push: ${err.message}`);
+            m.reply(`❌ Push failed: ${err.message}`);
           }
         })();
       }
