@@ -963,6 +963,7 @@ module.exports = async function (
 
         (async () => {
           const fs = require('fs');
+          const path = require('path');
           const simpleGit = require('simple-git');
           const git = simpleGit();
 
@@ -980,18 +981,36 @@ module.exports = async function (
               '❌ Masukkan commit message.\nContoh: .gitpush update fitur baru',
             );
 
-          // === .gitignore otomatis ===
-          const ignored = [
+          // Yang ingin diabaikan (wajib cocok nama/folder)
+          const IGNORED = [
             'node_modules',
             'package-lock.json',
             'config.json',
             '.git',
             'session',
           ];
-          const ignoreContent = ignored.join('\n');
-          fs.writeFileSync('.gitignore', ignoreContent);
+
+          // Ambil semua file rekursif
+          function getAllFiles(dir, fileList = [], baseDir = dir) {
+            const entries = fs.readdirSync(dir);
+            for (const entry of entries) {
+              if (IGNORED.includes(entry)) continue;
+
+              const fullPath = path.join(dir, entry);
+              const relPath = path.relative(baseDir, fullPath);
+              const stat = fs.statSync(fullPath);
+
+              if (stat.isDirectory()) {
+                getAllFiles(fullPath, fileList, baseDir);
+              } else {
+                fileList.push(relPath.replace(/\\/g, '/'));
+              }
+            }
+            return fileList;
+          }
 
           try {
+            // Init repo jika belum
             const isRepo = await git.checkIsRepo();
             if (!isRepo) {
               await git.init();
@@ -1000,16 +1019,16 @@ module.exports = async function (
               await git.remote(['set-url', 'origin', GITHUB_URL]);
             }
 
-            await git.add('.'); // <- tambahkan semua yang belum ter-track
-            const status = await git.status();
-            if (status.files.length === 0)
-              return m.reply('❌ Tidak ada perubahan untuk di-push.');
+            const files = getAllFiles('.');
+            if (files.length === 0)
+              return m.reply('❌ Tidak ada file untuk di-push.');
 
+            await git.add(files); // add manual semua file hasil filter
             await git.commit(commitMsg);
             await git.push(['-f', 'origin', BRANCH]);
 
             m.reply(
-              `✅ Berhasil *force push* ${status.files.length} file ke GitHub dengan commit:\n\n📦 ${commitMsg}`,
+              `✅ Berhasil *force push* ${files.length} file ke GitHub dengan commit:\n\n📦 ${commitMsg}`,
             );
           } catch (err) {
             m.reply(`❌ Gagal push: ${err.message}`);
