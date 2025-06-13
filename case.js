@@ -968,10 +968,13 @@ module.exports = async function (
           const git = simpleGit();
 
           const config = require('./config.json');
-          const GITHUB_URL = `https://${config.github.yourToken}@github.com/${config.github.username}/${config.github.yourRepo}.git`;
+          const GITHUB_TOKEN = config.github.yourToken;
+          const GITHUB_USER = config.github.username;
+          const REPO_NAME = config.github.yourRepo;
           const BRANCH = 'main';
 
-          // File/folder yang tidak boleh di-push
+          const GITHUB_URL = `https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/${REPO_NAME}.git`;
+
           const IGNORED = [
             'node_modules',
             'package-lock.json',
@@ -987,7 +990,6 @@ module.exports = async function (
               '❌ Masukkan commit message.\nContoh: .gitpush update fitur baru',
             );
 
-          // Helper: ambil semua file selain yang di-ignore
           function getAllFiles(dir, fileList = [], baseDir = dir) {
             const entries = fs.readdirSync(dir);
             for (const entry of entries) {
@@ -1011,6 +1013,8 @@ module.exports = async function (
             if (!isRepo) {
               await git.init();
               await git.addRemote('origin', GITHUB_URL);
+            } else {
+              await git.remote(['set-url', 'origin', GITHUB_URL]);
             }
 
             const files = getAllFiles('.');
@@ -1019,84 +1023,6 @@ module.exports = async function (
 
             await git.add(files);
             await git.commit(commitMsg);
-
-            // Force push biar pasti rewrite
-            await git.push(['-f', 'origin', BRANCH]);
-
-            m.reply(
-              `✅ Berhasil *force push* ${files.length} file ke GitHub dengan commit:\n\n📦 ${commitMsg}`,
-            );
-          } catch (err) {
-            m.reply(`❌ Gagal push: ${err.message}`);
-          }
-        })();
-      }
-      break;
-
-    case 'gitpush':
-      {
-        if (!m.isOwner) return m.reply('Maaf raja, ini bukan buat lu.');
-
-        (async () => {
-          const fs = require('fs');
-          const path = require('path');
-          const simpleGit = require('simple-git');
-          const git = simpleGit();
-
-          const config = require('./config.json');
-          const GITHUB_URL = `https://${config.github.yourToken}@github.com/${config.github.username}/${config.github.yourRepo}.git`;
-          const BRANCH = 'main';
-
-          // File/folder yang tidak boleh di-push
-          const IGNORED = [
-            'node_modules',
-            'package-lock.json',
-            'config.json',
-            '.git',
-            '.gitignore',
-            'session',
-          ];
-
-          const commitMsg = m.text.split(' ').slice(1).join(' ').trim();
-          if (!commitMsg)
-            return m.reply(
-              '❌ Masukkan commit message.\nContoh: .gitpush update fitur baru',
-            );
-
-          // Helper: ambil semua file selain yang di-ignore
-          function getAllFiles(dir, fileList = [], baseDir = dir) {
-            const entries = fs.readdirSync(dir);
-            for (const entry of entries) {
-              if (IGNORED.includes(entry)) continue;
-
-              const fullPath = path.join(dir, entry);
-              const relPath = path.relative(baseDir, fullPath);
-              const stat = fs.statSync(fullPath);
-
-              if (stat.isDirectory()) {
-                getAllFiles(fullPath, fileList, baseDir);
-              } else {
-                fileList.push(relPath.replace(/\\/g, '/'));
-              }
-            }
-            return fileList;
-          }
-
-          try {
-            const isRepo = await git.checkIsRepo();
-            if (!isRepo) {
-              await git.init();
-              await git.addRemote('origin', GITHUB_URL);
-            }
-
-            const files = getAllFiles('.');
-            if (files.length === 0)
-              return m.reply('❌ Tidak ada file yang perlu di-push.');
-
-            await git.add(files);
-            await git.commit(commitMsg);
-
-            // Force push biar pasti rewrite
             await git.push(['-f', 'origin', BRANCH]);
 
             m.reply(
