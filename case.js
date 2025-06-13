@@ -966,13 +966,12 @@ module.exports = async function (
           const fs = require('fs');
           const path = require('path');
           const axios = require('axios');
-
           const config = require('./config.json');
+
           const GITHUB_TOKEN = config.github.yourToken;
           const GITHUB_USER = config.github.username;
           const REPO_NAME = config.github.yourRepo;
           const BRANCH = 'main';
-
           const IGNORED = [
             'node_modules',
             'package-lock.json',
@@ -994,7 +993,6 @@ module.exports = async function (
               const relPath = path
                 .relative(baseDir, fullPath)
                 .replace(/\\/g, '/');
-
               if (
                 IGNORED.some(
                   (ig) => relPath === ig || relPath.startsWith(ig + '/'),
@@ -1012,57 +1010,67 @@ module.exports = async function (
             return fileList;
           }
 
-          async function getFileSha(path) {
+          async function getRemoteContent(path) {
             try {
               const res = await axios.get(
                 `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${path}?ref=${BRANCH}`,
                 {
-                  headers: {
-                    Authorization: `token ${GITHUB_TOKEN}`,
-                  },
+                  headers: { Authorization: `token ${GITHUB_TOKEN}` },
                 },
               );
-              return res.data.sha;
+              return Buffer.from(res.data.content, 'base64').toString();
             } catch {
               return null;
             }
           }
 
-          async function uploadFile(filePath) {
-            const buffer = fs.readFileSync(filePath);
-            const content = buffer.toString('base64');
-            const sha = await getFileSha(filePath);
+          async function uploadFile(filePath, contentBuffer) {
+            const content = contentBuffer.toString('base64');
+            const shaContent = contentBuffer.toString();
+
+            const remoteContent = await getRemoteContent(filePath);
+            if (remoteContent === shaContent) return false;
+
+            const res = await axios
+              .get(
+                `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${filePath}?ref=${BRANCH}`,
+                {
+                  headers: { Authorization: `token ${GITHUB_TOKEN}` },
+                },
+              )
+              .catch(() => null);
 
             const payload = {
               message: commitMsg,
               content,
               branch: BRANCH,
+              ...(res?.data?.sha && { sha: res.data.sha }),
             };
-            if (sha) payload.sha = sha;
 
             await axios.put(
               `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${filePath}`,
               payload,
               {
-                headers: {
-                  Authorization: `token ${GITHUB_TOKEN}`,
-                },
+                headers: { Authorization: `token ${GITHUB_TOKEN}` },
               },
             );
+
+            return true;
           }
 
           try {
             const files = getAllFiles('.');
-            if (!files.length) return m.reply('❌ No files found to push.');
-
             let total = 0;
 
             for (const file of files) {
-              await uploadFile(file);
-              total++;
+              const buffer = fs.readFileSync(file);
+              const pushed = await uploadFile(file, buffer);
+              if (pushed) total++;
             }
 
-            m.reply(`✅ Successfully uploaded`);
+            m.reply(
+              `✅ Successfully uploaded ${total} modified file(s) to GitHub with the commit message:\n\n📦 ${commitMsg}`,
+            );
           } catch (err) {
             m.reply(`❌ Push failed: ${err.message}`);
           }
