@@ -963,7 +963,6 @@ module.exports = async function (
 
         (async () => {
           const fs = require('fs');
-          const path = require('path');
           const simpleGit = require('simple-git');
           const git = simpleGit();
 
@@ -972,7 +971,6 @@ module.exports = async function (
           const GITHUB_USER = config.github.username;
           const REPO_NAME = config.github.yourRepo;
           const BRANCH = 'main';
-
           const GITHUB_URL = `https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/${REPO_NAME}.git`;
 
           const commitMsg = m.text.split(' ').slice(1).join(' ').trim();
@@ -981,7 +979,7 @@ module.exports = async function (
               '❌ Masukkan commit message.\nContoh: .gitpush update fitur baru',
             );
 
-          // Yang ingin diabaikan (wajib cocok nama/folder)
+          // === .gitignore otomatis (jika belum ada) ===
           const IGNORED = [
             'node_modules',
             'package-lock.json',
@@ -989,28 +987,12 @@ module.exports = async function (
             '.git',
             'session',
           ];
-
-          // Ambil semua file rekursif
-          function getAllFiles(dir, fileList = [], baseDir = dir) {
-            const entries = fs.readdirSync(dir);
-            for (const entry of entries) {
-              if (IGNORED.includes(entry)) continue;
-
-              const fullPath = path.join(dir, entry);
-              const relPath = path.relative(baseDir, fullPath);
-              const stat = fs.statSync(fullPath);
-
-              if (stat.isDirectory()) {
-                getAllFiles(fullPath, fileList, baseDir);
-              } else {
-                fileList.push(relPath.replace(/\\/g, '/'));
-              }
-            }
-            return fileList;
+          const IGNORE_FILE = '.gitignore';
+          if (!fs.existsSync(IGNORE_FILE)) {
+            fs.writeFileSync(IGNORE_FILE, IGNORED.join('\n'));
           }
 
           try {
-            // Init repo jika belum
             const isRepo = await git.checkIsRepo();
             if (!isRepo) {
               await git.init();
@@ -1019,16 +1001,18 @@ module.exports = async function (
               await git.remote(['set-url', 'origin', GITHUB_URL]);
             }
 
-            const files = getAllFiles('.');
-            if (files.length === 0)
-              return m.reply('❌ Tidak ada file untuk di-push.');
+            await git.add('.'); // ✅ INI yang benar: add semua, tapi skip yang ada di .gitignore
+            const status = await git.status();
+            const changed = status.files.length;
 
-            await git.add(files); // add manual semua file hasil filter
+            if (changed === 0)
+              return m.reply('❌ Tidak ada perubahan untuk di-push.');
+
             await git.commit(commitMsg);
             await git.push(['-f', 'origin', BRANCH]);
 
             m.reply(
-              `✅ Berhasil *force push* ${files.length} file ke GitHub dengan commit:\n\n📦 ${commitMsg}`,
+              `✅ Berhasil *force push* ${changed} file ke GitHub dengan commit:\n\n📦 ${commitMsg}`,
             );
           } catch (err) {
             m.reply(`❌ Gagal push: ${err.message}`);
